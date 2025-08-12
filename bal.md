@@ -1,0 +1,43 @@
+# AST Graph for Employee MySQL Client
+
+- Module
+  - Imports
+    - `ballerina/time`
+    - `ballerinax/mysql`
+    - `ballerinax/mysql.driver` as `_`
+    - `ballerina/sql`
+  - Configurable Variables
+    - `USER: string`
+    - `PASSWORD: string`
+    - `HOST: string`
+    - `PORT: int`
+    - `DATABASE: string`
+  - Type Definitions
+    - `Employee` record
+      - `int? employee_id`
+      - `string first_name`
+      - `string last_name`
+      - `string email`
+      - `string phone`
+      - `time:Date hire_date`
+      - `int? manager_id`
+      - `string job_title`
+  - Constants
+    - `dbClient: mysql:Client` initialized with host, user, password, port, database="Company"
+  - Functions (all isolated)
+    - `addEmployee(Employee emp) returns int|error`
+      - Executes INSERT query into Employees table with fields from `emp`
+      - Returns last inserted ID or error
+    - `getEmployee(int id) returns Employee|error`
+      - Queries single employee by employee_id
+      - Returns Employee record or error
+    - `getAllEmployees() returns Employee[]|error`
+      - Queries all Employees
+      - Streams results into Employee array
+      - Returns array or error
+    - `updateEmployee(Employee emp) returns int|error`
+      - Executes UPDATE query on Employees table by employee_id
+      - Returns last inserted ID or error
+    - `removeEmployee(int id) returns int|error`
+      - Executes DELETE query for employee_id
+      - Returns affected row count or error
