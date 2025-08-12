@@ -1,6 +1,6 @@
 [package]
 org = "yasithrashan"
-name = "ballerina_codebase_agent"
+name = "ballerina_codebase_filter"
 version = "0.1.0"
 distribution = "2201.12.7"
 

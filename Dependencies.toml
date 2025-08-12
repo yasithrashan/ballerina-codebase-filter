@@ -408,7 +408,7 @@ dependencies = [
 
 [[package]]
 org = "yasithrashan"
-name = "ballerina_codebase_agent"
+name = "ballerina_codebase_filter"
 version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "io"},
@@ -416,6 +416,6 @@ dependencies = [
 	{org = "ballerinax", name = "ai.openai"}
 ]
 modules = [
-	{org = "yasithrashan", packageName = "ballerina_codebase_agent", moduleName = "ballerina_codebase_agent"}
+	{org = "yasithrashan", packageName = "ballerina_codebase_filter", moduleName = "ballerina_codebase_filter"}
 ]
 
