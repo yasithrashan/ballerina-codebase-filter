@@ -30,10 +30,6 @@ dependencies = [
 	{org = "ballerina", name = "uuid"},
 	{org = "ballerina", name = "yaml"}
 ]
-modules = [
-	{org = "ballerina", packageName = "ai", moduleName = "ai"},
-	{org = "ballerina", packageName = "ai", moduleName = "ai.intelligence"}
-]
 
 [[package]]
 org = "ballerina"
@@ -415,7 +411,6 @@ org = "yasithrashan"
 name = "ballerina_codebase_agent"
 version = "0.1.0"
 dependencies = [
-	{org = "ballerina", name = "ai"},
 	{org = "ballerina", name = "io"},
 	{org = "ballerinai", name = "observe"},
 	{org = "ballerinax", name = "ai.openai"}
