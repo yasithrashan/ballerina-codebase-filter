@@ -1,76 +1,152 @@
 import ballerina/io;
-import ballerinax/ai.openai;
+import ballerinax/openai.chat as chat;
 
 configurable string apiKey = ?;
 configurable string userQuery = ?;
 
-function filterRelevantSections(string astMdContent, string query) returns string|error {
-    openai:ModelProvider model = check new (apiKey, openai:GPT_4O_MINI);
+chat:ChatCompletionTool fileReaderTool = {
+    'type: "function",
+    'function: {
+        name: "read_file",
+        description: "Read and analyze code file content",
+        parameters: {
+            "type": "object",
+            "properties": {
+                "filename": {
+                    "type": "string",
+                    "description": "The file path to read"
+                }
+            },
+            "required": ["filename"]
+        }
+    }
+};
 
-    string relevantSections = check model->generate(`
-        You are a code analysis expert specializing in identifying relevant code sections for specific queries.
-        Analyze the provided codebase AST structure and extract only the most relevant sections.
+function analyzeCodeWithTools() returns string|error {
+    chat:Client openAIChat = check new ({auth: {token: apiKey}});
 
-        QUERY: "${query}"
+    chat:ChatCompletionRequestMessage[] messages = [
+        {
+            "role": "user",
+            "content": string `Analyze this codebase for: ${userQuery}.
+            First, read the bal.md file to understand the code structure and identify which specific files contain relevant code sections.
+            Then read those relevant files to extract the most important code snippets.`
+        }
+    ];
 
-        CODEBASE STRUCTURE: The content below represents a Ballerina codebase in AST-like markdown format.
+    chat:CreateChatCompletionRequest request = {
+        model: "gpt-4o-mini",
+        messages: messages,
+        tools: [fileReaderTool]
+    };
 
-        ANALYSIS INSTRUCTIONS:
-        1. Identify files and specific code sections most relevant to: "${query}"
+    chat:CreateChatCompletionResponse response = check openAIChat->/chat/completions.post(request);
 
-        2. Consider:
-           - Direct relevance to the query topic
-           - Dependencies and related components
-           - Implementation details vs interface definitions
-           - Error handling and configuration related to the query
-           - Type definitions that support the queried functionality
-           - Import statements and external dependencies
+    if response.choices[0].message?.tool_calls is chat:ChatCompletionMessageToolCall[] {
+        chat:ChatCompletionMessageToolCall[] toolCalls = <chat:ChatCompletionMessageToolCall[]>response.choices[0].message?.tool_calls;
 
-        3. For each relevant section, include:
-           - File name and location
-           - Complete code construct (class, function, type definition, etc.)
-           - Associated documentation/comments
-           - Related dependencies and type references
+ 
+        chat:ChatCompletionRequestMessage assistantMsg = {
+            role: response.choices[0].message.role,
+            content: response.choices[0].message.content,
+            tool_calls: toolCalls
+        };
+        messages.push(assistantMsg);
 
-        4. Prioritize by relevance:
-           - PRIMARY: Direct implementations and main functionality
-           - SECONDARY: Supporting types, configurations, and dependencies
-           - TERTIARY: Utility functions and helper methods
+        // Process each tool call
+        foreach chat:ChatCompletionMessageToolCall toolCall in toolCalls {
+            if toolCall.'function.name == "read_file" {
+                // Parse the function arguments to get the filename
+                json functionArgs = check toolCall.'function.arguments.fromJsonString();
+                string filename = check functionArgs.filename;
 
-        5. Output format:
-           - Use clear markdown sections for each file
-           - Include code blocks with proper syntax highlighting
-           - Add brief explanations of relevance for each section
-           - Maintain proper code structure and indentation
+                string fileContent;
+                do {
+                    fileContent = check io:fileReadString(filename);
+                } on fail error e {
+                    fileContent = string `Error reading file ${filename}: ${e.message()}`;
+                }
 
-        6. Exclude:
-           - Unrelated code sections
-           - Redundant or duplicate information
-           - Overly verbose documentation not directly relevant
+                // Add tool response message
+                messages.push({
+                    "role": "tool",
+                    "content": fileContent,
+                    "tool_call_id": toolCall.id
+                });
+            }
+        }
 
-        CODEBASE AST CONTENT:
-        ${astMdContent}
+        // Make another request to get the final analysis
+        chat:CreateChatCompletionRequest finalRequest = {
+            model: "gpt-4o-mini",
+            messages: messages
+        };
 
-        RESPONSE FORMAT:
-        Return a well-structured markdown document with:
-        ## Relevant Code Sections for: "${query}"
+        chat:CreateChatCompletionResponse finalResponse = check openAIChat->/chat/completions.post(finalRequest);
 
-        ### Primary Relevance
-        [Most directly relevant code sections]
+        // Check if there are more tool calls in the response
+        if finalResponse.choices[0].message?.tool_calls is chat:ChatCompletionMessageToolCall[] {
+            chat:ChatCompletionMessageToolCall[] moreCalls = <chat:ChatCompletionMessageToolCall[]>finalResponse.choices[0].message?.tool_calls;
 
-        ### Secondary Relevance
-        [Supporting types, configurations, dependencies]
+            // Add the assistant message
+            messages.push({
+                role: finalResponse.choices[0].message.role,
+                content: finalResponse.choices[0].message.content,
+                tool_calls: moreCalls
+            });
 
-        ### Implementation Context
-        [Brief explanation of how sections relate to the query]
-        `);
-    return relevantSections;
+            // Process additional tool calls
+            foreach chat:ChatCompletionMessageToolCall toolCall in moreCalls {
+                if toolCall.'function.name == "read_file" {
+                    json functionArgs = check toolCall.'function.arguments.fromJsonString();
+                    string filename = check functionArgs.filename;
+
+                    string fileContent;
+                    do {
+                        fileContent = check io:fileReadString(filename);
+                    } on fail error e {
+                        fileContent = string `Error reading file ${filename}: ${e.message()}`;
+                    }
+
+                    messages.push({
+                        "role": "tool",
+                        "content": fileContent,
+                        "tool_call_id": toolCall.id
+                    });
+                }
+            }
+
+            // Make final request for analysis
+            messages.push({
+                "role": "user",
+                "content": string `Based on all the files you've read, extract and format only the most relevant code sections for: ${userQuery}.
+
+                Format as:
+                ## Relevant Code Sections
+
+                ### Primary Relevance
+                [Most relevant code with explanations]
+
+                ### Secondary Relevance
+                [Supporting code and dependencies]`
+            });
+
+            chat:CreateChatCompletionRequest lastRequest = {
+                model: "gpt-4o-mini",
+                messages: messages
+            };
+
+            chat:CreateChatCompletionResponse lastResponse = check openAIChat->/chat/completions.post(lastRequest);
+            return lastResponse.choices[0].message.content ?: "No response generated";
+        }
+
+        return finalResponse.choices[0].message.content ?: "No response generated";
+    }
+
+    return response.choices[0].message.content ?: "No response generated";
 }
 
 public function main() returns error? {
-    string astMdContent = check io:fileReadString("./bal.md");
-
-    string relevantSections = check filterRelevantSections(astMdContent, userQuery);
-
-    io:println("Relevant sections:\n", relevantSections);
+    string result = check analyzeCodeWithTools();
+    io:println("Analysis Result:\n", result);
 }

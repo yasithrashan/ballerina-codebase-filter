@@ -9,30 +9,6 @@ distribution-version = "2201.12.7"
 
 [[package]]
 org = "ballerina"
-name = "ai"
-version = "1.1.4"
-dependencies = [
-	{org = "ballerina", name = "constraint"},
-	{org = "ballerina", name = "data.jsondata"},
-	{org = "ballerina", name = "data.xmldata"},
-	{org = "ballerina", name = "file"},
-	{org = "ballerina", name = "http"},
-	{org = "ballerina", name = "io"},
-	{org = "ballerina", name = "jballerina.java"},
-	{org = "ballerina", name = "lang.array"},
-	{org = "ballerina", name = "lang.regexp"},
-	{org = "ballerina", name = "log"},
-	{org = "ballerina", name = "math.vector"},
-	{org = "ballerina", name = "mcp"},
-	{org = "ballerina", name = "mime"},
-	{org = "ballerina", name = "time"},
-	{org = "ballerina", name = "url"},
-	{org = "ballerina", name = "uuid"},
-	{org = "ballerina", name = "yaml"}
-]
-
-[[package]]
-org = "ballerina"
 name = "auth"
 version = "2.14.0"
 dependencies = [
@@ -75,15 +51,6 @@ dependencies = [
 org = "ballerina"
 name = "data.jsondata"
 version = "1.1.1"
-dependencies = [
-	{org = "ballerina", name = "jballerina.java"},
-	{org = "ballerina", name = "lang.object"}
-]
-
-[[package]]
-org = "ballerina"
-name = "data.xmldata"
-version = "1.4.2"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "lang.object"}
@@ -248,21 +215,6 @@ dependencies = [
 
 [[package]]
 org = "ballerina"
-name = "math.vector"
-version = "1.2.0"
-
-[[package]]
-org = "ballerina"
-name = "mcp"
-version = "0.9.1"
-dependencies = [
-	{org = "ballerina", name = "http"},
-	{org = "ballerina", name = "jballerina.java"},
-	{org = "ballerina", name = "uuid"}
-]
-
-[[package]]
-org = "ballerina"
 name = "mime"
 version = "2.12.0"
 dependencies = [
@@ -340,18 +292,6 @@ dependencies = [
 ]
 
 [[package]]
-org = "ballerina"
-name = "yaml"
-version = "0.8.0"
-dependencies = [
-	{org = "ballerina", name = "file"},
-	{org = "ballerina", name = "io"},
-	{org = "ballerina", name = "lang.array"},
-	{org = "ballerina", name = "lang.regexp"},
-	{org = "ballerina", name = "log"}
-]
-
-[[package]]
 org = "ballerinai"
 name = "observe"
 version = "0.0.0"
@@ -361,25 +301,6 @@ dependencies = [
 ]
 modules = [
 	{org = "ballerinai", packageName = "observe", moduleName = "observe"}
-]
-
-[[package]]
-org = "ballerinax"
-name = "ai.openai"
-version = "1.2.1"
-dependencies = [
-	{org = "ballerina", name = "ai"},
-	{org = "ballerina", name = "constraint"},
-	{org = "ballerina", name = "http"},
-	{org = "ballerina", name = "jballerina.java"},
-	{org = "ballerina", name = "lang.array"},
-	{org = "ballerina", name = "lang.regexp"},
-	{org = "ballerina", name = "log"},
-	{org = "ballerinax", name = "openai.chat"},
-	{org = "ballerinax", name = "openai.embeddings"}
-]
-modules = [
-	{org = "ballerinax", packageName = "ai.openai", moduleName = "ai.openai"}
 ]
 
 [[package]]
@@ -394,16 +315,8 @@ dependencies = [
 	{org = "ballerina", name = "url"},
 	{org = "ballerinai", name = "observe"}
 ]
-
-[[package]]
-org = "ballerinax"
-name = "openai.embeddings"
-version = "1.0.5"
-dependencies = [
-	{org = "ballerina", name = "constraint"},
-	{org = "ballerina", name = "http"},
-	{org = "ballerina", name = "url"},
-	{org = "ballerinai", name = "observe"}
+modules = [
+	{org = "ballerinax", packageName = "openai.chat", moduleName = "openai.chat"}
 ]
 
 [[package]]
@@ -413,7 +326,7 @@ version = "0.1.0"
 dependencies = [
 	{org = "ballerina", name = "io"},
 	{org = "ballerinai", name = "observe"},
-	{org = "ballerinax", name = "ai.openai"}
+	{org = "ballerinax", name = "openai.chat"}
 ]
 modules = [
 	{org = "yasithrashan", packageName = "ballerina_codebase_filter", moduleName = "ballerina_codebase_filter"}
